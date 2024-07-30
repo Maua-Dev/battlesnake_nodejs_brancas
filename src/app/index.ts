@@ -131,19 +131,35 @@ function getCloseFood(foods: Array<Point>, myHead: Point, directions: { [key: st
     }
 }
 
-function getLoopingPosition(myHead: Point, myBody: Array<Point>, directions: { [key: string]: Point }) {
+function getLoopingPosition(myHead: Point, myBody: Array<Point>) {
     // Get the the direction and coords of my tail and return the direction to it
     const myTail = myBody[myBody.length - 1];
-    const directionX = myHead.x < myTail.x ? 'right' : myHead.x > myTail.x ? 'left' : '';
-    const directionY = myHead.y < myTail.y ? 'up' : myHead.y > myTail.y ? 'down' : '';
+    const thirdPart = myBody[myBody.length - 2];
+    let possibleMoves: { [key: string]: Point } = {};
 
-    const tag = directionX !== '' ? directionX : directionY;
+    if (thirdPart.x === myTail.x) {
+        possibleMoves = {
+            up: { x: myHead.x, y: myHead.y + 1 },
+            down: { x: myHead.x, y: myHead.y - 1 },
+        }
+    }
+    else if(thirdPart.y === myTail.y){
+        possibleMoves = {
+            left: { x: myHead.x - 1, y: myHead.y },
+            right: { x: myHead.x + 1, y: myHead.y }
+        }
+    }
+    else{
+        const directionX = myHead.x < myTail.x ? 'right' : myHead.x > myTail.x ? 'left' : '';
+        const directionY = myHead.y < myTail.y ? 'up' : myHead.y > myTail.y ? 'down' : '';
 
-    const result: { [key: string]: Point } = {};
-    result[tag] = myTail;
+        const tag = directionX !== '' ? directionX : directionY;
 
-    return result;
+        possibleMoves = {};
+        possibleMoves[tag] = myTail;
+    }
 
+    return possibleMoves;
 }
 
 
@@ -177,7 +193,22 @@ function chooseMove(data: any) {
         }
         else{
             // Start looping
-            directions = getLoopingPosition(myHead, myBody, directions);
+            const getLoopingValues = getLoopingPosition(myHead, myBody);
+            const keysLoop = Object.keys(getLoopingValues);
+            const keysDir = Object.keys(directions);
+            const intersection = keysLoop.filter(key => keysDir.includes(key));
+            if (intersection.length > 0) {
+                const newDirections: { [key: string]: Point } = {};
+                intersection.forEach(key => {
+                    newDirections[key] = directions[key];
+                });
+
+                directions = newDirections;
+            }
+            else{
+                directions = getLoopingValues;
+            }
+
 
         }
         directions = avoidSnakes(myBody, directions, snakes);
