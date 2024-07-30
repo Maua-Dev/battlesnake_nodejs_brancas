@@ -208,10 +208,7 @@ function chooseMove(data: any) {
             else{
                 directions = getLoopingValues;
             }
-
-
         }
-        directions = avoidSnakes(myBody, directions, snakes);
     }
     else{
         // If I don't have length 4, get some food
