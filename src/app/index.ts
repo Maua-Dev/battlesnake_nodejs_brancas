@@ -132,11 +132,41 @@ function getCloseFood(foods: Array<Point>, myHead: Point, directions: { [key: st
     }
 }
 
+function getLoopingPosition(myHead: Point, myBody: Array<Point>, directions: { [key: string]: Point }) {
+    // Get the direction to my tail
+    const myTail = myBody[myBody.length - 1];
+
+    // Check which direction gets to my tail
+    const directionX = myHead.x < myTail.x ? 'right' : myHead.x > myTail.x ? 'left' : '';
+    const directionY = myHead.y < myTail.y ? 'up' : myHead.y > myTail.y ? 'down' : '';
+
+    // Remove moves that are not in the direction of my tail
+    const bestDirections: { [key: string]: Point } = Object.assign({}, directions);
+    for (const move in bestDirections) {
+        if (directionX !== '' && move !== directionX) {
+            delete bestDirections[move];
+        }
+        if (directionY !== '' && move !== directionY) {
+            delete bestDirections[move];
+        }
+    }
+
+    // Check if bestDirections is possible
+    if (Object.keys(bestDirections).length === 0) {
+        return directions;
+    }
+    else{
+        return bestDirections;
+    }
+}
+
 
 function chooseMove(data: any) {
     // Get my snake parameters
     const myHead = data.you.head;
     const myBody = data.you.body;
+    const mySize = myBody.length;
+    const myHealth = data.you.health;
     
     // Board size
     const boardWidth = data.board.width;
@@ -152,15 +182,25 @@ function chooseMove(data: any) {
     directions = avoidWalls(myBody, directions, boardWidth, boardHeight);
     directions = avoidSnakes(myBody, directions, snakes);
 
-    // Get my health
-    const myHealth = data.you.health;
-    if (myHealth < 33) {
-        // If my health is low, get some food
+    // Check if I have lenght 4
+    if (mySize === 4) {
+        // If I have length 4, check my health
+        if (myHealth < 33) {
+            // If my health is low, get some food
+            directions = getCloseFood(foods, myHead, directions);
+        }
+        else{
+            // Start looping
+            directions = getLoopingPosition(myHead, myBody, directions);
+
+        }
+        directions = avoidSnakes(myBody, directions, snakes);
+    }
+    else{
+        // If I don't have length 4, get some food
         directions = getCloseFood(foods, myHead, directions);
     }
-    // else {
 
-    // }
 
     // Get possible move's keys
     return specifyMove(directions);
