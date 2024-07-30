@@ -47,6 +47,32 @@ function avoidWalls(myBody: Array<any>, directions: { [key: string]: Point }, bo
     return directions;
 }
 
+interface Snake {
+    body: Array<Point>;
+    id: String,
+    name: String,
+    health: number
+    latency: String,
+    head: Point,
+    length: number,
+    shout: String
+    squad: String
+    customizations: any
+}
+
+function avoidSnakes(myBody: Array<Point>, directions: { [key: string]: Point }, snakes: Array<Snake>) {
+    // Remove moves that collide with other snakes
+    for (const snake of snakes) {
+        for (const move in directions) {
+            if (snake.body.some((segment: Point) => segment.x === directions[move].x && segment.y === directions[move].y)) {
+                delete directions[move];
+            }
+        }
+    }
+
+    return directions;
+}
+
 function chooseMove(data: any) {
     // Get my snake parameters
     const myHead = data.you.head;
@@ -56,13 +82,33 @@ function chooseMove(data: any) {
     const boardWidth = data.board.width;
     const boardHeight = data.board.height;
 
+    // Get snakes parameters
+    const snakes = data.board.snakes;
+
     // Filter possible moves
     let directions = avoidMyNeck(myHead, myBody);
     directions = avoidWalls(myBody, directions, boardWidth, boardHeight);
+    directions = avoidSnakes(myBody, directions, snakes);
 
-    // Get move's name
+    // Get possible move's keys
     let keys = Object.keys(directions);
-    return keys[Math.floor(Math.random() * keys.length)];
+
+    // If there is no possible move, loses
+    let move;
+    let shout;
+
+    if (keys.length === 0) {
+        move = 'up';
+        shout = 'I lost!';
+    }
+    else{
+        move = keys[Math.floor(Math.random() * keys.length)];
+        shout = `I'm moving ${move}!`;
+    }
+
+    return {
+        move, shout
+    };
 }
 
 const app = express();
@@ -76,11 +122,7 @@ app.post('/start', (req: Request, res: Response) => {
 app.post('/move', (req: Request, res: Response) => {
 
     console.log(req.body);
-    const move = chooseMove(req.body);
-    const response = {
-        move: move,
-        shout: `I'm moving ${move}!`
-    };
+    const response = chooseMove(req.body);
     res.json(response);
 });
 
