@@ -7,7 +7,6 @@ import { router } from './routes/snake_routes'
 
 
 // Define functions for the game strat
-
 function specifyMove(directions: { [key: string]: Point }) {
     // Get possible move's keys
     let keys = Object.keys(directions);
@@ -133,31 +132,18 @@ function getCloseFood(foods: Array<Point>, myHead: Point, directions: { [key: st
 }
 
 function getLoopingPosition(myHead: Point, myBody: Array<Point>, directions: { [key: string]: Point }) {
-    // Get the direction to my tail
+    // Get the the direction and coords of my tail and return the direction to it
     const myTail = myBody[myBody.length - 1];
-
-    // Check which direction gets to my tail
     const directionX = myHead.x < myTail.x ? 'right' : myHead.x > myTail.x ? 'left' : '';
     const directionY = myHead.y < myTail.y ? 'up' : myHead.y > myTail.y ? 'down' : '';
 
-    // Remove moves that are not in the direction of my tail
-    const bestDirections: { [key: string]: Point } = Object.assign({}, directions);
-    for (const move in bestDirections) {
-        if (directionX !== '' && move !== directionX) {
-            delete bestDirections[move];
-        }
-        if (directionY !== '' && move !== directionY) {
-            delete bestDirections[move];
-        }
-    }
+    const tag = directionX !== '' ? directionX : directionY;
 
-    // Check if bestDirections is possible
-    if (Object.keys(bestDirections).length === 0) {
-        return directions;
-    }
-    else{
-        return bestDirections;
-    }
+    const result: { [key: string]: Point } = {};
+    result[tag] = myTail;
+
+    return result;
+
 }
 
 
@@ -200,7 +186,6 @@ function chooseMove(data: any) {
         // If I don't have length 4, get some food
         directions = getCloseFood(foods, myHead, directions);
     }
-
 
     // Get possible move's keys
     return specifyMove(directions);
