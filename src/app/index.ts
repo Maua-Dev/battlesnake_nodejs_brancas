@@ -7,6 +7,29 @@ import { router } from './routes/snake_routes'
 
 
 // Define functions for the game strat
+
+function specifyMove(directions: { [key: string]: Point }) {
+    // Get possible move's keys
+    let keys = Object.keys(directions);
+
+    // If there is no possible move, loses
+    let move;
+    let shout;
+
+    if (keys.length === 0) {
+        move = 'up';
+        shout = 'I lost!';
+    }
+    else{
+        move = keys[Math.floor(Math.random() * keys.length)];
+        shout = `I'm moving ${move}!`;
+    }
+
+    return {
+        move, shout
+    };
+}
+
 interface Point {
     x: number;
     y: number;
@@ -73,6 +96,43 @@ function avoidSnakes(myBody: Array<Point>, directions: { [key: string]: Point },
     return directions;
 }
 
+function getCloseFood(foods: Array<Point>, myHead: Point, directions: { [key: string]: Point }) {
+    // Get the closest food
+    let closestFood = foods[0];
+    let minDistance = Math.abs(myHead.x - closestFood.x) + Math.abs(myHead.y - closestFood.y);
+    for (const food of foods) {
+        const distance = Math.abs(myHead.x - food.x) + Math.abs(myHead.y - food.y);
+        if (distance < minDistance) {
+            closestFood = food;
+            minDistance = distance;
+        }
+    }
+
+    // Get the direction to the closest food
+    const directionX = myHead.x < closestFood.x ? 'right' : myHead.x > closestFood.x ? 'left' : '';
+    const directionY = myHead.y < closestFood.y ? 'up' : myHead.y > closestFood.y ? 'down' : '';
+
+    // Remove moves that are not in the direction of the closest food
+    const bestDirections: { [key: string]: Point } = Object.assign({}, directions);
+    for (const move in bestDirections) {
+        if (directionX !== '' && move !== directionX) {
+            delete bestDirections[move];
+        }
+        if (directionY !== '' && move !== directionY) {
+            delete bestDirections[move];
+        }
+    }
+
+    // Check if bestDirections is possible
+    if (Object.keys(bestDirections).length === 0) {
+        return directions;
+    }
+    else{
+        return bestDirections;
+    }
+}
+
+
 function chooseMove(data: any) {
     // Get my snake parameters
     const myHead = data.you.head;
@@ -82,33 +142,28 @@ function chooseMove(data: any) {
     const boardWidth = data.board.width;
     const boardHeight = data.board.height;
 
-    // Get snakes parameters
+    // Get board objects
     const snakes = data.board.snakes;
+    const foods = data.board.food;
+
 
     // Filter possible moves
     let directions = avoidMyNeck(myHead, myBody);
     directions = avoidWalls(myBody, directions, boardWidth, boardHeight);
     directions = avoidSnakes(myBody, directions, snakes);
 
+    // Get my health
+    const myHealth = data.you.health;
+    if (myHealth < 33) {
+        // If my health is low, get some food
+        directions = getCloseFood(foods, myHead, directions);
+    }
+    // else {
+
+    // }
+
     // Get possible move's keys
-    let keys = Object.keys(directions);
-
-    // If there is no possible move, loses
-    let move;
-    let shout;
-
-    if (keys.length === 0) {
-        move = 'up';
-        shout = 'I lost!';
-    }
-    else{
-        move = keys[Math.floor(Math.random() * keys.length)];
-        shout = `I'm moving ${move}!`;
-    }
-
-    return {
-        move, shout
-    };
+    return specifyMove(directions);
 }
 
 const app = express();
