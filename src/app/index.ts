@@ -33,6 +33,7 @@ interface Point {
     x: number;
     y: number;
 }
+
 function avoidMyNeck(myHead: any, myBody: Array<any>) {
     const possibleMoves: { [key: string]: Point } = {
         up: { x: myHead.x, y: myHead.y + 1 },
@@ -131,19 +132,18 @@ function getCloseFood(foods: Array<Point>, myHead: Point, directions: { [key: st
     }
 }
 
-function getLoopingPosition(myHead: Point, myBody: Array<Point>) {
+export function getLoopingPosition(myHead: Point, myBody: Array<Point>) {
     // Get the the direction and coords of my tail and return the direction to it
     const myTail = myBody[myBody.length - 1];
     const thirdPart = myBody[myBody.length - 2];
     let possibleMoves: { [key: string]: Point } = {};
-
-    if (thirdPart.x === myTail.x) {
+    if (thirdPart.y === myHead.y) {
         possibleMoves = {
             up: { x: myHead.x, y: myHead.y + 1 },
             down: { x: myHead.x, y: myHead.y - 1 },
         }
     }
-    else if(thirdPart.y === myTail.y){
+    else if(thirdPart.x === myHead.x){
         possibleMoves = {
             left: { x: myHead.x - 1, y: myHead.y },
             right: { x: myHead.x + 1, y: myHead.y }
@@ -153,10 +153,18 @@ function getLoopingPosition(myHead: Point, myBody: Array<Point>) {
         const directionX = myHead.x < myTail.x ? 'right' : myHead.x > myTail.x ? 'left' : '';
         const directionY = myHead.y < myTail.y ? 'up' : myHead.y > myTail.y ? 'down' : '';
 
-        const tag = directionX !== '' ? directionX : directionY;
-
-        possibleMoves = {};
-        possibleMoves[tag] = myTail;
+        if (directionX === 'right') {
+            possibleMoves['right'] = { x: myHead.x + 1, y: myHead.y };
+        }
+        if (directionY === 'up') {
+            possibleMoves['up'] = { x: myHead.x, y: myHead.y + 1 };
+        }
+        if (directionX === 'left') {
+            possibleMoves['left'] = { x: myHead.x - 1, y: myHead.y };
+        }
+        if (directionY === 'down') {
+            possibleMoves['down'] = { x: myHead.x, y: myHead.y - 1 };
+        }
     }
 
     return possibleMoves;
@@ -229,7 +237,7 @@ app.post('/start', (req: Request, res: Response) => {
 
 app.post('/move', (req: Request, res: Response) => {
 
-    console.log(req.body);
+    // console.log(req.body);
     const response = chooseMove(req.body);
     res.json(response);
 });
