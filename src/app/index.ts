@@ -195,7 +195,7 @@ function chooseMove(data: any) {
     // Check if I have lenght 4
     if (mySize === 4) {
         // If I have length 4, check my health
-        if (myHealth < 33) {
+        if (myHealth < 20) {
             // If my health is low, get some food
             directions = getCloseFood(foods, myHead, directions);
         }
